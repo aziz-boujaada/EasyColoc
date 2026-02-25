@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ColocationSeeder::class,
+            ColocationUsersSeeder::class,
             InvitationSeeder::class,
             ExpeneseSeeder::class,
             PaymentSeeder::class,
