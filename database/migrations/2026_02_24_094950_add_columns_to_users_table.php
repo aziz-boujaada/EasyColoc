@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('reutation')->default(1);
+            $table->integer('reputation')->default(1);
             $table->enum('role' ,['admin','user'])->default('user');
             $table->boolean('is_banned')->default(false);
             $table->timestamp('banned_at');
