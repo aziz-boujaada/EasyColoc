@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class ColocationUsers extends Model
+class ColocationUsers extends Pivot
 {
     use HasFactory ; 
 
@@ -14,4 +15,12 @@ class ColocationUsers extends Model
         'colocation_id',
         'role',
     ];
+
+
+     public function user(){
+        return $this->belongsTo(User::class);
+    }
+    public function colocation(){
+        return $this->belongsTo(Colocation::class);
+    }
 }
