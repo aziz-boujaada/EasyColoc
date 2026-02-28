@@ -14,4 +14,8 @@ class Invitation extends Model
         'token',
         'colocation_id'
     ];
+
+    public function colocation(){
+        return $this->belongsTo(Colocation::class);
+    }
 }
