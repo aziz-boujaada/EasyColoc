@@ -17,7 +17,11 @@ class ColocationController extends Controller
      */
     public function index()
     {
-        $colocations = Colocation::where('owner_id', Auth::id())->with(['users', 'owner', 'members'])->get();
+       $colocations = Colocation::with(['users', 'owner'])
+                ->whereHas('users', function($q) {
+                    $q->where('user_id', Auth::id());
+                })
+                ->get();
 
         return view('colocations.index', compact('colocations'));
     }
@@ -37,10 +41,14 @@ class ColocationController extends Controller
     {
         $alreadyHaveColocation = Colocation::where('owner_id', Auth::id())->where('status', 'active')->exists();
         if (!$alreadyHaveColocation) {
-            Colocation::create([
+         $colocation = Colocation::create([
                 'name' => $request->name,
                 'owner_id' => Auth::id(),
                 'status' => 'active'
+            ]);
+
+            $colocation->users()->attach(Auth::id(), [
+                'role' => 'owner'
             ]);
             return redirect()->route('colocations.index')->with('success', 'colocation create with successfuly');
         } else {
@@ -84,7 +92,7 @@ class ColocationController extends Controller
     {
 
         $membersCount = $colocation->users()->count();
-        if ($membersCount === 0) {
+        if ($membersCount === 1) {
             $colocation->delete();
             return redirect()->route('colocations.index')
                 ->with('success', 'colocation deleted');
@@ -94,16 +102,20 @@ class ColocationController extends Controller
         }
     }
 
-    public function updateColocationStatus(updateColocationStatusRequest $request ,  Colocation $colocation)
+    public function updateColocationStatus(updateColocationStatusRequest $request,  Colocation $colocation)
     {
 
+        $haveActiveColocation = Colocation::where('owner_id', Auth::id())->where('status', 'active')->exists();
 
-        if($colocation->owner_id !== Auth::id())abort(403);
-        $membersCount = $colocation->users()->wherePivot('role' , '==' , 'member')->count();
-        
-        if ($membersCount === 0) {
+        if ($colocation->owner_id !== Auth::id()) abort(403);
+        $membersCount = $colocation->users()->count();
+
+        if ($request->status == 'active' && $haveActiveColocation) {
+            return redirect()->route('colocations.index')->with('error', 'You already have an active colocation');
+        }
+        if ($membersCount === 1) {
             $colocation->update([
-               'status' => $request->status
+                'status' => $request->status
             ]);
             return redirect()->route('colocations.index')
                 ->with('success', 'colocation status updated');
@@ -112,4 +124,26 @@ class ColocationController extends Controller
                 ->with('error', 'You must remove all members to cancel this colocation');
         }
     }
+
+    public function removeMember(Colocation $colocation, $userId)
+{
+    if ($colocation->owner_id !== Auth::id()) {
+        abort(403);
+    }
+
+    if ($userId == $colocation->owner_id) {
+        return redirect()->route('colocations.index')
+            ->with('error', 'You cannot remove the owner.');
+    }
+
+    if (!$colocation->users()->where('user_id', $userId)->exists()) {
+        return redirect()->route('colocations.index')
+            ->with('error', 'Member not found in this colocation.');
+    }
+
+    $colocation->users()->detach($userId);
+
+    return redirect()->route('colocations.index')
+        ->with('success', 'Member removed successfully.');
+}
 }
