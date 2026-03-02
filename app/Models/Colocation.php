@@ -18,7 +18,7 @@ class Colocation extends Model
     ];
 
     public function users():BelongsToMany{
-         return $this->belongsToMany(User::class , 'colocation_user')
+         return $this->belongsToMany(User::class , 'colocation_user' , 'colocation_id' ,'user_id')
          ->using(ColocationUsers::class)
          ->withPivot(['role','left_at']);
     }

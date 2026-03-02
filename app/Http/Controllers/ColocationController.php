@@ -7,6 +7,8 @@ use App\Http\Requests\StoreColocationRequest;
 use App\Http\Requests\UpdateColocationRequest;
 use App\Http\Requests\updateColocationStatusRequest;
 use App\Models\Colocation;
+use App\Models\Expense;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -125,25 +127,37 @@ class ColocationController extends Controller
         }
     }
 
-    public function removeMember(Colocation $colocation, $userId)
+    public function removeMember(Colocation $colocation, $member_id)
 {
     if ($colocation->owner_id !== Auth::id()) {
         abort(403);
     }
+       
+      $debts = Payment::where('colocations_id', $colocation->id)
+        ->where('from_user_id', $member_id)
+        ->where('amount' , '>' , 0)
+        ->whereNull('paid_at')
+        ->get();
 
-    if ($userId == $colocation->owner_id) {
-        return redirect()->route('colocations.index')
-            ->with('error', 'You cannot remove the owner.');
-    }
+        foreach($debts as $debt){
+            $debt->update([
+                'from_user_id' => $colocation->owner_id
+            ]);
+        }
 
-    if (!$colocation->users()->where('user_id', $userId)->exists()) {
+    if ($member_id == $colocation->owner_id) {
         return redirect()->route('colocations.index')
+        ->with('error', 'You cannot remove the owner.');
+        }
+        
+        if (!$colocation->users()->where('user_id', $member_id)->exists()) {
+            return redirect()->route('colocations.index')
             ->with('error', 'Member not found in this colocation.');
-    }
-
-    $colocation->users()->detach($userId);
-
-    return redirect()->route('colocations.index')
-        ->with('success', 'Member removed successfully.');
+            }
+            
+            $colocation->users()->detach($member_id);
+            
+            return redirect()->route('colocations.index')
+            ->with('success', 'Member removed successfully.');
 }
 }
