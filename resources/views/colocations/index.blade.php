@@ -20,13 +20,9 @@
             <a href="{{ route('colocations.index') }}" class="block px-4 py-2 rounded hover:bg-green-700 transition">
                 <i class="fa-solid fa-users mr-2"></i> My Colocations
             </a>
-            @foreach($colocations as $coloc)
-             @if($coloc->owner_id == Auth::id())
             <a href="{{ route('colocation.create') }}" class="block px-4 py-2 rounded hover:bg-green-700 transition">
                 <i class="fa-solid fa-plus mr-2"></i> Create Colocation
             </a>
-            @endif
-            @endforeach
             <a href="{{ route('expenses.index') }}" class="block px-4 py-2 rounded hover:bg-green-700 transition">
                 <i class="fa-solid fa-money mr-2"></i> My Expenses
             </a>
