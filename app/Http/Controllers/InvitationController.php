@@ -9,6 +9,7 @@ use App\Models\Invitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class InvitationController extends Controller
 {
@@ -34,7 +35,7 @@ class InvitationController extends Controller
     public function sendInvitation(SendInvationRequest $request, Colocation $colocation)
     {
 
-        $token =  uniqid('tok-', true);
+        $token = Str::random(40);
         Invitation::create([
             'email' => $request->email,
             'token' => $token,
@@ -43,7 +44,7 @@ class InvitationController extends Controller
 
         Mail::to($request->email)->send(new InvitationMail($colocation, $token));
 
-        return redirect()->route('colocations.index')->with('success', 'invitaion send with success');
+        return redirect()->route('colocations.index')->with('success', 'Invitation sent successfully.');
     }
 
     /**
@@ -57,8 +58,6 @@ class InvitationController extends Controller
         }
 
         $colocation = $invitation->colocation;
-        $colocation->users()->attach(Auth::id());
-
 
         $colocation->users()->syncWithoutDetaching([
             Auth::id() => ['role' => 'member', 'left_at' => null]

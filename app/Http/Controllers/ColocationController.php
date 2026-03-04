@@ -52,7 +52,7 @@ class ColocationController extends Controller
             $colocation->users()->attach(Auth::id(), [
                 'role' => 'owner'
             ]);
-            return redirect()->route('colocations.index')->with('success', 'colocation create with successfuly');
+            return redirect()->route('colocations.index')->with('success', 'Colocation created successfully.');
         } else {
             return redirect()->route('colocations.index')->with('error', 'You already have an active colocation');
         }
@@ -132,32 +132,32 @@ class ColocationController extends Controller
     if ($colocation->owner_id !== Auth::id()) {
         abort(403);
     }
-       
-      $debts = Payment::where('colocations_id', $colocation->id)
-        ->where('from_user_id', $member_id)
-        ->where('amount' , '>' , 0)
-        ->whereNull('paid_at')
-        ->get();
-
-        foreach($debts as $debt){
-            $debt->update([
-                'from_user_id' => $colocation->owner_id
-            ]);
-        }
 
     if ($member_id == $colocation->owner_id) {
         return redirect()->route('colocations.index')
-        ->with('error', 'You cannot remove the owner.');
-        }
-        
-        if (!$colocation->users()->where('user_id', $member_id)->exists()) {
-            return redirect()->route('colocations.index')
+            ->with('error', 'You cannot remove the owner.');
+    }
+
+    if (!$colocation->users()->where('user_id', $member_id)->exists()) {
+        return redirect()->route('colocations.index')
             ->with('error', 'Member not found in this colocation.');
-            }
-            
-            $colocation->users()->detach($member_id);
-            
-            return redirect()->route('colocations.index')
-            ->with('success', 'Member removed successfully.');
+    }
+
+    $debts = Payment::where('colocations_id', $colocation->id)
+        ->where('from_user_id', $member_id)
+        ->where('amount', '>', 0)
+        ->whereNull('paid_at')
+        ->get();
+
+    foreach ($debts as $debt) {
+        $debt->update([
+            'from_user_id' => $colocation->owner_id
+        ]);
+    }
+
+    $colocation->users()->detach($member_id);
+
+    return redirect()->route('colocations.index')
+        ->with('success', 'Member removed successfully.');
 }
 }

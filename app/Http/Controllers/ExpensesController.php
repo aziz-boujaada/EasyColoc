@@ -102,12 +102,15 @@ class ExpensesController extends Controller
         $share = $expense->amount / $memberCount;
 
         foreach ($members as $member) {
-            Payment::create([
-                'expense_id' => $expense->id,
-                'user_id' => $member->id,
-                'amount' => $share,
-                'status' => $member->id == $expense->payer_id ? 'paid' : 'unpaid'
-            ]);
+            if ($member->id != $expense->payer_id) {
+                Payment::create([
+                    'expense_id'     => $expense->id,
+                    'colocations_id' => $expense->colocation_id,
+                    'from_user_id'   => $member->id,
+                    'to_user_id'     => $expense->payer_id,
+                    'amount'         => $share,
+                ]);
+            }
         }
 
         return redirect()->route('expenses.index')

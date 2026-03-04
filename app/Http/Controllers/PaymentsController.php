@@ -5,16 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentsController extends Controller
 {
     
     public function markPaid(Payment $payment){
-         $payment->update([
-        'paid_at' => Carbon::now(),
-        'status' => 'paid'
-    ]);
+        if ($payment->from_user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    return redirect()->route('expenses.index')->with('success','payment paied');
+        $payment->update([
+            'paid_at' => Carbon::now(),
+        ]);
+
+        return redirect()->route('expenses.index')->with('success', 'Payment marked as paid.');
     }
 }
